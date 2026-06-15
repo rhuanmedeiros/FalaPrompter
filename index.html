@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceFlow Prompter - Teleprompter Inteligente por Voz</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Font Awesome for clean icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Main App Container -->
+    <div id="app" class="app-container">
+        
+        <!-- ================= EDITOR MODE ================= -->
+        <section id="editor-view" class="view-section active">
+            <header class="app-header">
+                <div class="logo">
+                    <i class="fa-solid fa-microphone-lines logo-icon"></i>
+                    <h1>VoiceFlow <span class="accent-text">Prompter</span></h1>
+                </div>
+                <div class="header-actions">
+                    <button id="btn-theme-toggle" class="btn-icon" title="Alternar Tema">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <main class="editor-main">
+                <!-- Text Editor Area -->
+                <div class="editor-pane">
+                    <div class="pane-header">
+                        <h2><i class="fa-regular fa-file-lines"></i> Seu Roteiro</h2>
+                        <span class="word-counter" id="word-count">0 palavras</span>
+                    </div>
+                    <textarea id="script-input" placeholder="Cole ou digite seu texto aqui para iniciar o teleprompter... Exemplo: 'Olá! Este é o VoiceFlow Prompter. Ele escuta a sua voz e avança o texto de forma inteligente. Experimente ler este texto de teste para ver a mágica acontecer!'"></textarea>
+                </div>
+
+                <!-- Settings Pane -->
+                <div class="settings-pane">
+                    <h2><i class="fa-solid fa-sliders"></i> Ajustes de Leitura</h2>
+                    
+                    <div class="settings-group">
+                        <label for="select-lang">Idioma de Reconhecimento</label>
+                        <div class="custom-select">
+                            <select id="select-lang">
+                                <option value="pt-BR" selected>Português (Brasil)</option>
+                                <option value="en-US">English (United States)</option>
+                                <option value="es-ES">Español (España)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <div class="range-header">
+                            <label for="range-font-size">Tamanho do Texto</label>
+                            <span class="range-val" id="val-font-size">48px</span>
+                        </div>
+                        <input type="range" id="range-font-size" min="24" max="96" value="48" step="2">
+                    </div>
+
+                    <div class="settings-group">
+                        <label>Estilo do Texto (Cor)</label>
+                        <div class="color-options">
+                            <button class="color-dot active" data-color="green" style="background: #00ff66;" title="Verde Neon"></button>
+                            <button class="color-dot" data-color="amber" style="background: #ffaa00;" title="Âmbar / Laranja"></button>
+                            <button class="color-dot" data-color="cyan" style="background: #00e5ff;" title="Ciano"></button>
+                            <button class="color-dot" data-color="white" style="background: #ffffff;" title="Branco Suave"></button>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <label for="select-font-family">Fonte</label>
+                        <div class="custom-select">
+                            <select id="select-font-family">
+                                <option value="'Outfit', sans-serif" selected>Outfit (Moderna)</option>
+                                <option value="Georgia, serif">Georgia (Serifada clássica)</option>
+                                <option value="'JetBrains Mono', monospace">JetBrains (Monoespaçada)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <div class="range-header">
+                            <label for="range-scroll-speed" title="Velocidade usada se o reconhecimento estiver pausado">Velocidade Backup (Auto-Scroll)</label>
+                            <span class="range-val" id="val-scroll-speed">5</span>
+                        </div>
+                        <input type="range" id="range-scroll-speed" min="1" max="15" value="5" step="1">
+                    </div>
+
+                    <div class="settings-group">
+                        <div class="range-header">
+                            <label for="range-sensitivity" title="Janela de busca de palavras para recuperação de match">Janela de Busca (Tolerância)</label>
+                            <span class="range-val" id="val-sensitivity">30</span>
+                        </div>
+                        <input type="range" id="range-sensitivity" min="10" max="60" value="30" step="5">
+                    </div>
+
+                    <button id="btn-start-prompter" class="btn-primary">
+                        <span>Iniciar Teleprompter</span>
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            </main>
+        </section>
+
+        <!-- ================= PROMPTER VIEW ================= -->
+        <section id="prompter-view" class="view-section">
+            <!-- Top Stats & Indicator Bar (discreet glassmorphic overlay) -->
+            <div class="prompter-status-bar">
+                <button id="btn-exit-prompter" class="btn-secondary btn-small">
+                    <i class="fa-solid fa-arrow-left"></i> Sair
+                </button>
+                
+                <div class="status-indicator">
+                    <span class="status-dot green pulse" id="mic-status-dot"></span>
+                    <span id="mic-status-text">Microfone pronto</span>
+                </div>
+
+                <div class="prompter-mode-tag">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="mode-badge-text">Modo Voz</span>
+                </div>
+            </div>
+
+            <!-- Reading Guide Overlay Line -->
+            <div class="reading-guide-line">
+                <i class="fa-solid fa-caret-right guide-arrow"></i>
+            </div>
+
+            <!-- Main Scroll Container -->
+            <div id="prompter-scroll-container" class="prompter-scroll-container">
+                <div id="prompter-text-content" class="prompter-text-content color-green font-outfit" style="font-size: 48px;">
+                    <!-- Words will be dynamically injected here as spans -->
+                </div>
+                <!-- Extra space at the bottom to allow scrolling last sentences to the top guide line -->
+                <div class="prompter-spacer"></div>
+            </div>
+
+            <!-- Floating Control Panel at the Bottom (Discreet HUD) -->
+            <div class="prompter-controls-hud">
+                <button id="btn-hud-voice-toggle" class="btn-hud active" title="Alternar Modo Voz / Auto-Scroll Manual">
+                    <i class="fa-solid fa-microphone"></i>
+                    <span>Modo Voz</span>
+                </button>
+
+                <div class="hud-divider"></div>
+
+                <button id="btn-hud-play" class="btn-hud-circle" title="Play / Pause">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+
+                <div class="hud-divider"></div>
+
+                <div class="hud-adjuster">
+                    <button id="btn-hud-text-dec" class="btn-hud-adjust" title="Diminuir Fonte"><i class="fa-solid fa-minus"></i></button>
+                    <span class="hud-adjuster-label">Fonte</span>
+                    <button id="btn-hud-text-inc" class="btn-hud-adjust" title="Aumentar Fonte"><i class="fa-solid fa-plus"></i></button>
+                </div>
+
+                <div class="hud-divider"></div>
+
+                <div class="hud-adjuster">
+                    <button id="btn-hud-speed-dec" class="btn-hud-adjust" title="Diminuir Velocidade"><i class="fa-solid fa-minus"></i></button>
+                    <span class="hud-adjuster-label">Velocidade</span>
+                    <button id="btn-hud-speed-inc" class="btn-hud-adjust" title="Aumentar Velocidade"><i class="fa-solid fa-plus"></i></button>
+                </div>
+
+                <button id="btn-hud-reset" class="btn-hud" title="Reiniciar Texto">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Reiniciar</span>
+                </button>
+            </div>
+            
+            <!-- Speech Transcript Debug Output -->
+            <div id="speech-debug-toast" class="speech-debug-toast">
+                <div class="debug-title"><i class="fa-solid fa-bug"></i> Reconhecido:</div>
+                <div id="debug-transcript-text" class="debug-content">Nenhuma fala captada ainda...</div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js?v=8"></script>
+</body>
+</html>

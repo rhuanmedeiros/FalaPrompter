@@ -1,0 +1,915 @@
+/* ==========================================================================
+   VOICEFLOW PROMPTER - DESIGN SYSTEM (style.css)
+   ========================================================================== */
+
+/* --- Custom Properties & Color Tokens --- */
+:root {
+    /* Color Palette - Dark Mode (Default) */
+    --bg-primary: #0a0b10;
+    --bg-secondary: #121420;
+    --bg-tertiary: #1b1e32;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.15);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    /* Neon Colors */
+    --accent-purple: #8b5cf6;
+    --accent-purple-glow: rgba(139, 92, 246, 0.3);
+    
+    --neon-green: #00ff66;
+    --neon-green-glow: rgba(0, 255, 102, 0.2);
+    
+    --neon-amber: #ffaa00;
+    --neon-amber-glow: rgba(255, 170, 0, 0.2);
+    
+    --neon-cyan: #00e5ff;
+    --neon-cyan-glow: rgba(0, 229, 255, 0.2);
+    
+    --white-soft: #f1f5f9;
+    --white-soft-glow: rgba(241, 245, 249, 0.2);
+    
+    /* UI States */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    
+    /* Font Families */
+    --font-sans: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    
+    /* Glassmorphism */
+    --glass-bg: rgba(18, 20, 32, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-blur: blur(12px);
+    
+    /* Transition speeds */
+    --t-fast: 0.2s ease;
+    --t-normal: 0.3s ease;
+}
+
+/* Light Mode overrides */
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.15);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(0, 0, 0, 0.08);
+}
+
+/* --- Base Resets & Global Styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    transition: background-color var(--t-normal), color var(--t-normal);
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* --- App Layout --- */
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.view-section {
+    display: none;
+    flex: 1;
+    width: 100%;
+}
+
+.view-section.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Header --- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-icon {
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--accent-purple), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: pulse 3s infinite ease-in-out;
+}
+
+.logo h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.accent-text {
+    background: linear-gradient(135deg, #a78bfa, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* --- Buttons & Inputs --- */
+.btn-icon {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--t-fast);
+}
+
+.btn-icon:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all var(--t-fast);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+    filter: brightness(1.1);
+}
+
+.btn-secondary {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all var(--t-fast);
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-color);
+    border-color: var(--border-hover);
+}
+
+.btn-small {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.85rem;
+}
+
+/* --- Editor Main Layout --- */
+.editor-main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    flex: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .editor-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Editor Pane */
+.editor-pane {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.pane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: rgba(255,255,255,0.01);
+}
+
+.pane-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.word-counter {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.editor-pane textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 1.5rem;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    transition: all var(--t-fast);
+}
+
+.editor-pane textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* Settings Pane */
+.settings-pane {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: fit-content;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.settings-pane h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.settings-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.range-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.range-val {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent-purple);
+    background-color: var(--bg-tertiary);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+}
+
+/* Custom Styled Range Input */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-tertiary);
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-purple);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 0 8px var(--accent-purple-glow);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px var(--accent-purple);
+}
+
+/* Custom styled dropdown select */
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    outline: none;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color var(--t-fast);
+}
+
+.custom-select select:focus {
+    border-color: var(--accent-purple);
+}
+
+.custom-select::after {
+    content: '\f107';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Color dot selection */
+.color-options {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+}
+
+.color-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all var(--t-fast);
+    position: relative;
+}
+
+.color-dot.active {
+    border-color: var(--accent-purple);
+    transform: scale(1.15);
+}
+
+.color-dot::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-secondary);
+}
+
+
+/* ==========================================================================
+   PROMPTER VIEW STYLES
+   ========================================================================== */
+
+#prompter-view {
+    background-color: #030303; /* Deep OLED black */
+    color: var(--white-soft);
+    position: relative;
+    overflow: hidden;
+    height: 100vh;
+    display: none;
+}
+
+#prompter-view.active {
+    /* Lock to the viewport via fixed positioning so the prompter never inherits
+       the growing height of .app-container (min-height:100vh). Without this the
+       flex chain stretches the scroll container to the full content height,
+       leaving scrollHeight === clientHeight and making auto-scroll impossible. */
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    z-index: 100;
+}
+
+/* Top Discreet Status Bar */
+.prompter-status-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+    pointer-events: none;
+}
+
+.prompter-status-bar button {
+    pointer-events: auto; /* enable click on back button */
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.65);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+}
+
+.status-dot.green {
+    background-color: var(--success);
+    box-shadow: 0 0 8px var(--success);
+}
+
+.status-dot.amber {
+    background-color: var(--warning);
+    box-shadow: 0 0 8px var(--warning);
+}
+
+.status-dot.red {
+    background-color: var(--error);
+    box-shadow: 0 0 8px var(--error);
+}
+
+.prompter-mode-tag {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #c084fc;
+    background: rgba(139, 92, 246, 0.15);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    backdrop-filter: blur(4px);
+}
+
+/* Reading Guide Guideline (Target area in top third) */
+.reading-guide-line {
+    position: absolute;
+    top: 30%;
+    left: 0;
+    width: 100%;
+    height: 1.8rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.15);
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.015);
+    pointer-events: none; /* Let clicks pass through */
+    z-index: 5;
+    display: flex;
+    align-items: center;
+}
+
+.guide-arrow {
+    position: absolute;
+    left: 1.5rem;
+    color: rgba(255,255,255,0.4);
+    font-size: 1.5rem;
+    animation: bounceRight 2s infinite;
+}
+
+/* Scroll Container */
+.prompter-scroll-container {
+    position: relative;
+    flex: 1;
+    min-height: 0; /* allow the flex item to shrink below content size so overflow scrolls */
+    overflow-y: scroll;
+    padding: 30vh 8% 40vh 8%; /* Top padding positions start of text, bottom padding allows scrolling past text */
+    /* Hide scrollbar for immersive reading but keep functionality */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.prompter-scroll-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+}
+
+.prompter-text-content {
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+    user-select: none;
+    transition: font-size 0.2s ease, color 0.2s ease;
+}
+
+/* Word elements styling in Teleprompter */
+.prompter-text-content .word {
+    display: inline-block;
+    margin-right: 0.28em;
+    margin-bottom: 0.15em;
+    opacity: 0.65;
+    transition: opacity 0.25s ease, color 0.2s ease, transform 0.25s ease;
+    border-radius: 4px;
+    padding: 0 4px;
+}
+
+/* Color Options for Teleprompter Text */
+.color-green .word { color: var(--white-soft); }
+.color-green .word.active { color: var(--neon-green); text-shadow: 0 0 15px var(--neon-green-glow); transform: scale(1.05); opacity: 1; font-weight: 600;}
+.color-green .word.read { opacity: 0.22; color: #64748b; }
+
+.color-amber .word { color: var(--white-soft); }
+.color-amber .word.active { color: var(--neon-amber); text-shadow: 0 0 15px var(--neon-amber-glow); transform: scale(1.05); opacity: 1; font-weight: 600;}
+.color-amber .word.read { opacity: 0.22; color: #64748b; }
+
+.color-cyan .word { color: var(--white-soft); }
+.color-cyan .word.active { color: var(--neon-cyan); text-shadow: 0 0 15px var(--neon-cyan-glow); transform: scale(1.05); opacity: 1; font-weight: 600;}
+.color-cyan .word.read { opacity: 0.22; color: #64748b; }
+
+.color-white .word { color: rgba(255,255,255,0.7); }
+.color-white .word.active { color: #ffffff; text-shadow: 0 0 15px var(--white-soft-glow); transform: scale(1.05); opacity: 1; font-weight: 600;}
+.color-white .word.read { opacity: 0.22; color: #64748b; }
+
+/* Font Family mappings for prompter */
+.font-outfit { font-family: var(--font-sans); }
+.font-georgia { font-family: Georgia, serif; line-height: 1.7; }
+.font-jetbrains { font-family: var(--font-mono); }
+
+.prompter-spacer {
+    height: 30vh;
+}
+
+/* Floating HUD Dashboard */
+.prompter-controls-hud {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    padding: 0.65rem 1.25rem;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 10;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    opacity: 0.95;
+    pointer-events: auto;
+}
+
+.prompter-controls-hud:hover {
+    opacity: 1;
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Auto-hide HUD when user is speaking/focused (handled by JS) */
+.prompter-controls-hud.autohide {
+    transform: translateX(-50%) translateY(120px);
+    opacity: 0;
+}
+
+.btn-hud {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--t-fast);
+}
+
+.btn-hud:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-hud.active {
+    color: #c084fc;
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.btn-hud-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+    transition: all var(--t-fast);
+}
+
+.btn-hud-circle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 15px rgba(139, 92, 246, 0.5);
+}
+
+.hud-divider {
+    width: 1px;
+    height: 24px;
+    background-color: var(--border-color);
+}
+
+.hud-adjuster {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hud-adjuster-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.btn-hud-adjust {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all var(--t-fast);
+}
+
+.btn-hud-adjust:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Speech debug panel (Discreet display of transcripts) */
+.speech-debug-toast {
+    position: absolute;
+    top: 4.5rem;
+    right: 1.5rem;
+    width: 280px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    transition: opacity 0.3s ease;
+    opacity: 0; /* hidden by default, toggles on activity */
+}
+
+.speech-debug-toast.active {
+    opacity: 0.9;
+}
+
+.debug-title {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.debug-content {
+    color: rgba(255, 255, 255, 0.9);
+    font-family: var(--font-mono);
+    max-height: 60px;
+    overflow-y: auto;
+    line-height: 1.4;
+}
+
+/* --- Keyframe Animations --- */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+.pulse {
+    animation: micPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes micPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+.status-dot.red.pulse {
+    animation: errorPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes errorPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+@keyframes bounceRight {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(5px);
+    }
+}
+
+/* Light Theme tweaks */
+[data-theme="light"] #prompter-view {
+    background-color: #fafafa;
+    color: #1e293b;
+}
+
+[data-theme="light"] .prompter-status-bar {
+    background: linear-gradient(to bottom, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
+}
+
+[data-theme="light"] .status-indicator {
+    background: rgba(255, 255, 255, 0.8);
+    color: #334155;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .prompter-mode-tag {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="light"] .reading-guide-line {
+    border-top-color: rgba(0, 0, 0, 0.1);
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+[data-theme="light"] .guide-arrow {
+    color: rgba(0,0,0,0.3);
+}
+
+[data-theme="light"] .prompter-text-content .word {
+    opacity: 0.65;
+}
+
+[data-theme="light"] .color-green .word { color: #334155; }
+[data-theme="light"] .color-green .word.active { color: #059669; opacity: 1; transform: scale(1.03); }
+[data-theme="light"] .color-green .word.read { opacity: 0.25; color: #94a3b8; }
+
+[data-theme="light"] .color-amber .word { color: #334155; }
+[data-theme="light"] .color-amber .word.active { color: #d97706; opacity: 1; transform: scale(1.03); }
+[data-theme="light"] .color-amber .word.read { opacity: 0.25; color: #94a3b8; }
+
+[data-theme="light"] .color-cyan .word { color: #334155; }
+[data-theme="light"] .color-cyan .word.active { color: #0891b2; opacity: 1; transform: scale(1.03); }
+[data-theme="light"] .color-cyan .word.read { opacity: 0.25; color: #94a3b8; }
+
+[data-theme="light"] .color-white .word { color: #334155; }
+[data-theme="light"] .color-white .word.active { color: #0f172a; opacity: 1; transform: scale(1.03); }
+[data-theme="light"] .color-white .word.read { opacity: 0.25; color: #94a3b8; }
+
+[data-theme="light"] .prompter-controls-hud {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .btn-hud {
+    color: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="light"] .btn-hud:hover {
+    color: black;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .btn-hud-circle {
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="light"] .btn-hud-adjust {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+    color: #1e293b;
+}
+
+[data-theme="light"] .btn-hud-adjust:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
