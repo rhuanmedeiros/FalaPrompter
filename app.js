@@ -542,7 +542,7 @@ Bom treino e ótimas gravações!`;
                     // Move a smooth chunk of the remaining distance per frame.
                     // Higher factor = snappier catch-up so the active word stays
                     // glued to the reading guide during continuous reading.
-                    container.scrollTop = currentScroll + diff * 0.45;
+                    container.scrollTop = currentScroll + diff * 0.35;
                 } else if (diff !== 0) {
                     // Snap the final sub-pixel gap so the word settles exactly on the line.
                     container.scrollTop = state.targetScrollTop;
