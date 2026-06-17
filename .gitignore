@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment / secrets (never commit)
+.env
+.env.*
+*.local
+secrets.*
+*.pem
+*.key
+
+# Claude Code local/personal config (keep launch.json shared)
+.claude/settings.local.json
+.claude/*.local.json
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+
+# Build / temp output
+dist/
+build/
+tmp/
+.cache/

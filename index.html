@@ -2,8 +2,21 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>VoiceFlow Prompter - Teleprompter Inteligente por Voz</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0a0b10">
+    <meta name="description" content="Teleprompter de gravação no navegador, sem conta, focado em criadores mobile.">
+    <!-- iOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VoiceFlow">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,6 +42,12 @@
                     </button>
                 </div>
             </header>
+
+            <!-- Compatibility notice -->
+            <div class="compat-notice">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Funciona melhor no <strong>Chrome (Android)</strong>. No iPhone, use o <strong>Safari atualizado</strong>. A gravação de vídeo exige conexão segura (<strong>HTTPS</strong> ou <strong>localhost</strong>).</span>
+            </div>
 
             <main class="editor-main">
                 <!-- Text Editor Area -->
@@ -110,19 +129,30 @@
 
         <!-- ================= PROMPTER VIEW ================= -->
         <section id="prompter-view" class="view-section">
+            <!-- Live camera feed (full-screen background behind the teleprompter text) -->
+            <video id="camera-feed" autoplay playsinline muted></video>
+            <!-- Translucent scrim to keep the text legible over the camera -->
+            <div class="prompter-scrim"></div>
+
             <!-- Top Stats & Indicator Bar (discreet glassmorphic overlay) -->
             <div class="prompter-status-bar">
                 <button id="btn-exit-prompter" class="btn-secondary btn-small">
                     <i class="fa-solid fa-arrow-left"></i> Sair
                 </button>
-                
+
                 <div class="status-indicator">
                     <span class="status-dot green pulse" id="mic-status-dot"></span>
                     <span id="mic-status-text">Microfone pronto</span>
                 </div>
 
-                <div class="prompter-mode-tag">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="mode-badge-text">Modo Voz</span>
+                <div class="status-right">
+                    <div class="rec-indicator" id="rec-indicator" hidden>
+                        <span class="rec-dot"></span>
+                        <span id="rec-timer">00:00</span>
+                    </div>
+                    <div class="prompter-mode-tag">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="mode-badge-text">Modo Voz</span>
+                    </div>
                 </div>
             </div>
 
@@ -142,6 +172,13 @@
 
             <!-- Floating Control Panel at the Bottom (Discreet HUD) -->
             <div class="prompter-controls-hud">
+                <button id="btn-record" class="btn-record" title="Preparando câmera..." disabled>
+                    <span class="rec-icon-idle"></span>
+                    <span class="btn-record-label">Gravar</span>
+                </button>
+
+                <div class="hud-divider"></div>
+
                 <button id="btn-hud-voice-toggle" class="btn-hud active" title="Alternar Modo Voz / Auto-Scroll Manual">
                     <i class="fa-solid fa-microphone"></i>
                     <span>Modo Voz</span>
@@ -180,11 +217,40 @@
                 <div class="debug-title"><i class="fa-solid fa-bug"></i> Reconhecido:</div>
                 <div id="debug-transcript-text" class="debug-content">Nenhuma fala captada ainda...</div>
             </div>
+
+            <!-- Post-recording result overlay (preview + download) -->
+            <div id="recording-result" class="recording-result" hidden>
+                <div class="recording-result-card">
+                    <h2><i class="fa-solid fa-clapperboard"></i> Gravação concluída</h2>
+                    <video id="recording-preview" controls playsinline></video>
+                    <p class="recording-format-note" id="recording-format-note"></p>
+                    <div class="recording-result-actions">
+                        <button id="btn-download" class="btn-primary">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Baixar vídeo</span>
+                        </button>
+                        <button id="btn-rerecord" class="btn-secondary">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Regravar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </section>
 
     </div>
 
     <!-- Scripts -->
-    <script src="app.js?v=9"></script>
+    <script src="app.js?v=10"></script>
+    <script>
+        // Register the service worker so the app is installable / works offline.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch((err) => {
+                    console.warn('[VFP] Service worker registration failed:', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

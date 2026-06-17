@@ -469,6 +469,39 @@ input[type="range"]::-webkit-slider-thumb:hover {
     z-index: 100;
 }
 
+/* Live camera feed — full-screen background behind the teleprompter text.
+   The preview is mirrored (front camera feel); the recorded stream is NOT
+   affected by this CSS transform. When no stream is attached, the deep-black
+   #prompter-view background shows through (text-only fallback). */
+#camera-feed {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    z-index: 0;
+    background-color: #030303;
+}
+
+/* Scrim gradient so the overlay text stays legible over any camera image. */
+.prompter-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(to bottom,
+        rgba(0, 0, 0, 0.55) 0%,
+        rgba(0, 0, 0, 0.35) 35%,
+        rgba(0, 0, 0, 0.45) 70%,
+        rgba(0, 0, 0, 0.75) 100%);
+}
+
+/* Keep the scrollable text above the camera + scrim. */
+.prompter-scroll-container {
+    z-index: 2;
+}
+
 /* Top Discreet Status Bar */
 .prompter-status-bar {
     position: absolute;
@@ -740,6 +773,183 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .btn-hud-adjust:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Record button (HUD) --- */
+.btn-record {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+    padding: 0.5rem 0.9rem;
+    border-radius: 22px;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--t-fast);
+}
+
+.btn-record:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fff;
+}
+
+.btn-record:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-record .rec-icon-idle {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--error);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+/* While recording: solid red, square "stop" glyph, pulsing */
+.btn-record.recording {
+    background: var(--error);
+    border-color: var(--error);
+    color: #fff;
+    animation: recPulse 1.6s infinite ease-in-out;
+}
+
+.btn-record.recording .rec-icon-idle {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background: #fff;
+    box-shadow: none;
+}
+
+@keyframes recPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    70%  { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* --- Recording indicator (status bar) --- */
+.status-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    pointer-events: none;
+}
+
+.rec-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #fff;
+    background: rgba(239, 68, 68, 0.85);
+    padding: 0.35rem 0.7rem;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.rec-indicator .rec-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #fff;
+    animation: pulse 1.2s infinite ease-in-out;
+}
+
+/* --- Post-recording result overlay --- */
+.recording-result {
+    position: absolute;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+}
+
+.recording-result[hidden] {
+    display: none;
+}
+
+.recording-result-card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.recording-result-card h2 {
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-primary);
+}
+
+#recording-preview {
+    width: 100%;
+    max-height: 50vh;
+    border-radius: 12px;
+    background: #000;
+}
+
+.recording-format-note {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.recording-result-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.recording-result-actions .btn-primary,
+.recording-result-actions .btn-secondary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* --- Compatibility notice (editor) --- */
+.compat-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin: 0 1.5rem 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.compat-notice i {
+    color: var(--accent-purple);
+    margin-top: 0.15rem;
+}
+
+.compat-notice strong {
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
 /* Speech debug panel (Discreet display of transcripts) */

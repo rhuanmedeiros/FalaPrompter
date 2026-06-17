@@ -34,7 +34,18 @@ document.addEventListener('DOMContentLoaded', () => {
         lastScrollTime: 0,
         
         // UI Auto-hide timer for controls HUD
-        hudTimeoutId: null
+        hudTimeoutId: null,
+
+        // Camera + video recording (MediaRecorder)
+        cameraStream: null,
+        cameraReady: false,
+        mediaRecorder: null,
+        recordedChunks: [],
+        recordedMimeType: '',
+        isRecording: false,
+        recStartTime: 0,
+        recTimerId: null,
+        recordedUrl: null
     };
 
     // --- DOM Elements ---
@@ -80,7 +91,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Debug Toast
         debugToast: document.getElementById('speech-debug-toast'),
-        debugText: document.getElementById('debug-transcript-text')
+        debugText: document.getElementById('debug-transcript-text'),
+
+        // Camera + recording
+        cameraFeed: document.getElementById('camera-feed'),
+        btnRecord: document.getElementById('btn-record'),
+        recIndicator: document.getElementById('rec-indicator'),
+        recTimer: document.getElementById('rec-timer'),
+        recordingResult: document.getElementById('recording-result'),
+        recordingPreview: document.getElementById('recording-preview'),
+        recordingFormatNote: document.getElementById('recording-format-note'),
+        btnDownload: document.getElementById('btn-download'),
+        btnRerecord: document.getElementById('btn-rerecord')
     };
 
     // --- Default Script Text ---
@@ -254,10 +276,13 @@ Bom treino e ótimas gravações!`;
         state.view = 'prompter';
         els.editorView.classList.remove('active');
         els.prompterView.classList.add('active');
-        
+
         // Reset scroll position
         state.targetScrollTop = 0;
         els.prompterScrollContainer.scrollTop = 0;
+
+            // Open the camera/microphone (non-blocking — teleprompter still works without it)
+            initCamera();
 
             // Auto trigger Play
             setPlayState(true);
@@ -273,9 +298,218 @@ Bom treino e ótimas gravações!`;
 
     function exitPrompter() {
         setPlayState(false);
+        if (state.isRecording) {
+            stopRecording();
+        }
+        hideRecordingResult();
+        stopCamera();
         state.view = 'editor';
         els.prompterView.classList.remove('active');
         els.editorView.classList.add('active');
+    }
+
+    // --- Camera & Video Recording ---
+
+    async function initCamera() {
+        // Already have a live stream from a previous start.
+        if (state.cameraStream) return;
+
+        const hasMediaDevices = navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+        if (!hasMediaDevices) {
+            handleCameraUnavailable('Câmera indisponível neste navegador — apenas teleprompter');
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user' },
+                audio: true
+            });
+            state.cameraStream = stream;
+            state.cameraReady = true;
+            els.cameraFeed.srcObject = stream;
+            // playsinline + muted let mobile browsers autoplay the preview.
+            try { await els.cameraFeed.play(); } catch (e) { /* autoplay may resolve later */ }
+
+            // Enable recording now that we have a stream.
+            els.btnRecord.disabled = false;
+            els.btnRecord.title = 'Gravar / Parar vídeo';
+        } catch (error) {
+            console.error('[VFP] getUserMedia failed:', error);
+            let msg = 'Câmera/microfone indisponível — apenas teleprompter';
+            if (error && error.name === 'NotAllowedError') {
+                msg = 'Permissão de câmera negada — apenas teleprompter';
+            } else if (error && error.name === 'NotFoundError') {
+                msg = 'Nenhuma câmera encontrada — apenas teleprompter';
+            }
+            handleCameraUnavailable(msg);
+        }
+    }
+
+    function handleCameraUnavailable(message) {
+        state.cameraReady = false;
+        els.btnRecord.disabled = true;
+        els.btnRecord.title = message;
+        updateMicStatus('amber', message, false);
+    }
+
+    function stopCamera() {
+        if (state.cameraStream) {
+            state.cameraStream.getTracks().forEach((track) => track.stop());
+            state.cameraStream = null;
+        }
+        state.cameraReady = false;
+        if (els.cameraFeed) els.cameraFeed.srcObject = null;
+    }
+
+    function pickMimeType() {
+        // Prefer MP4 (Safari/iOS, broad editor support); fall back to WebM variants.
+        const candidates = [
+            'video/mp4',
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm;codecs=vp9',
+            'video/webm;codecs=vp8',
+            'video/webm'
+        ];
+        if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) {
+            return '';
+        }
+        for (const type of candidates) {
+            if (MediaRecorder.isTypeSupported(type)) return type;
+        }
+        return '';
+    }
+
+    function startRecording() {
+        if (!state.cameraStream || typeof MediaRecorder === 'undefined') {
+            alert('Gravação não disponível: câmera ou MediaRecorder não suportados neste navegador.');
+            return;
+        }
+
+        // Fresh take — drop any previous recording artifacts.
+        revokeRecordedUrl();
+        state.recordedChunks = [];
+        state.recordedMimeType = pickMimeType();
+
+        try {
+            const options = state.recordedMimeType ? { mimeType: state.recordedMimeType } : undefined;
+            state.mediaRecorder = new MediaRecorder(state.cameraStream, options);
+        } catch (error) {
+            console.error('[VFP] Failed to create MediaRecorder:', error);
+            alert('Não foi possível iniciar a gravação neste navegador.');
+            return;
+        }
+
+        state.mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+                state.recordedChunks.push(event.data);
+            }
+        };
+
+        state.mediaRecorder.onstop = () => {
+            finalizeRecording();
+        };
+
+        state.mediaRecorder.onerror = (event) => {
+            console.error('[VFP] MediaRecorder error:', event.error || event);
+        };
+
+        // Timeslice keeps chunks flowing (important on some mobile browsers).
+        state.mediaRecorder.start(1000);
+        state.isRecording = true;
+        state.recStartTime = Date.now();
+
+        // UI: button -> stop, show timer
+        els.btnRecord.classList.add('recording');
+        els.btnRecord.querySelector('.btn-record-label').textContent = 'Parar';
+        els.recIndicator.hidden = false;
+        updateRecTimer();
+        state.recTimerId = setInterval(updateRecTimer, 500);
+    }
+
+    function stopRecording() {
+        if (!state.isRecording || !state.mediaRecorder) return;
+        try {
+            if (state.mediaRecorder.state !== 'inactive') {
+                state.mediaRecorder.stop();
+            }
+        } catch (error) {
+            console.warn('[VFP] Failed to stop MediaRecorder:', error);
+        }
+        state.isRecording = false;
+        clearInterval(state.recTimerId);
+        state.recTimerId = null;
+
+        // UI reset
+        els.btnRecord.classList.remove('recording');
+        els.btnRecord.querySelector('.btn-record-label').textContent = 'Gravar';
+        els.recIndicator.hidden = true;
+    }
+
+    function updateRecTimer() {
+        const elapsed = Math.floor((Date.now() - state.recStartTime) / 1000);
+        const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const ss = String(elapsed % 60).padStart(2, '0');
+        els.recTimer.textContent = `${mm}:${ss}`;
+    }
+
+    function finalizeRecording() {
+        if (state.recordedChunks.length === 0) {
+            console.warn('[VFP] No recorded data captured.');
+            return;
+        }
+        const type = state.recordedMimeType || 'video/webm';
+        const blob = new Blob(state.recordedChunks, { type });
+        revokeRecordedUrl();
+        state.recordedUrl = URL.createObjectURL(blob);
+
+        // Pause teleprompter playback while reviewing the clip.
+        setPlayState(false);
+
+        els.recordingPreview.src = state.recordedUrl;
+        els.recordingFormatNote.textContent = buildFormatNote(type);
+        els.recordingResult.hidden = false;
+    }
+
+    function buildFormatNote(type) {
+        const isWebm = type.includes('webm');
+        if (isWebm) {
+            return 'Formato .webm (ótimo no Chrome/Android). Alguns editores e o iPhone podem exigir conversão para .mp4.';
+        }
+        return 'Formato .mp4 (H.264) — boa compatibilidade com editores e dispositivos.';
+    }
+
+    function getRecordingExtension() {
+        return (state.recordedMimeType || 'video/webm').includes('mp4') ? 'mp4' : 'webm';
+    }
+
+    function downloadRecording() {
+        if (!state.recordedUrl) return;
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+        const a = document.createElement('a');
+        a.href = state.recordedUrl;
+        a.download = `voiceflow-${stamp}.${getRecordingExtension()}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function hideRecordingResult() {
+        els.recordingResult.hidden = true;
+        els.recordingPreview.removeAttribute('src');
+        els.recordingPreview.load();
+        revokeRecordedUrl();
+        state.recordedChunks = [];
+    }
+
+    function revokeRecordedUrl() {
+        if (state.recordedUrl) {
+            URL.revokeObjectURL(state.recordedUrl);
+            state.recordedUrl = null;
+        }
     }
 
     function applyPrompterStyles() {
@@ -835,6 +1069,24 @@ Bom treino e ótimas gravações!`;
     });
 
     els.btnHudReset.addEventListener('click', resetPrompter);
+
+    // --- Event Listeners: Recording ---
+    els.btnRecord.addEventListener('click', () => {
+        if (state.isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    });
+
+    els.btnDownload.addEventListener('click', downloadRecording);
+
+    els.btnRerecord.addEventListener('click', () => {
+        hideRecordingResult();
+        // Resume teleprompter so the user can record another take.
+        setPlayState(true);
+        resetIdleTimer();
+    });
 
     // Stop propagation of clicks inside HUD to avoid resetIdleTimer hiding it instantly
     els.hudPanel.addEventListener('click', (e) => {
