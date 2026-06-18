@@ -171,14 +171,13 @@
             </div>
 
             <!-- Floating Control Panel at the Bottom (Discreet HUD) -->
+            <!-- Persistent record button (always visible, never auto-hides) -->
+            <button id="btn-record" class="btn-record-fab" title="Preparando câmera..." disabled>
+                <span class="rec-icon-idle"></span>
+                <span class="btn-record-label">Gravar</span>
+            </button>
+
             <div class="prompter-controls-hud">
-                <button id="btn-record" class="btn-record" title="Preparando câmera..." disabled>
-                    <span class="rec-icon-idle"></span>
-                    <span class="btn-record-label">Gravar</span>
-                </button>
-
-                <div class="hud-divider"></div>
-
                 <button id="btn-hud-voice-toggle" class="btn-hud active" title="Alternar Modo Voz / Auto-Scroll Manual">
                     <i class="fa-solid fa-microphone"></i>
                     <span>Modo Voz</span>
@@ -241,7 +240,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=11"></script>
     <script>
         // Register the service worker so the app is installable / works offline.
         if ('serviceWorker' in navigator) {

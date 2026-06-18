@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
         hudTimeoutId: null,
 
         // Camera + video recording (MediaRecorder)
-        cameraStream: null,
+        cameraStream: null,     // video-only stream (mic stays free for speech recognition)
+        audioStream: null,      // acquired on demand only while recording
         cameraReady: false,
         mediaRecorder: null,
         recordedChunks: [],
@@ -321,9 +322,11 @@ Bom treino e ótimas gravações!`;
         }
 
         try {
+            // VIDEO ONLY on purpose: requesting audio here would seize the
+            // microphone and break the Web Speech API (voice scroll). The mic
+            // is acquired on demand in startRecording().
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user' },
-                audio: true
+                video: { facingMode: 'user' }
             });
             state.cameraStream = stream;
             state.cameraReady = true;
@@ -333,7 +336,7 @@ Bom treino e ótimas gravações!`;
 
             // Enable recording now that we have a stream.
             els.btnRecord.disabled = false;
-            els.btnRecord.title = 'Gravar / Parar vídeo';
+            els.btnRecord.title = 'Gravar vídeo';
         } catch (error) {
             console.error('[VFP] getUserMedia failed:', error);
             let msg = 'Câmera/microfone indisponível — apenas teleprompter';
@@ -358,8 +361,16 @@ Bom treino e ótimas gravações!`;
             state.cameraStream.getTracks().forEach((track) => track.stop());
             state.cameraStream = null;
         }
+        stopAudioStream();
         state.cameraReady = false;
         if (els.cameraFeed) els.cameraFeed.srcObject = null;
+    }
+
+    function stopAudioStream() {
+        if (state.audioStream) {
+            state.audioStream.getTracks().forEach((track) => track.stop());
+            state.audioStream = null;
+        }
     }
 
     function pickMimeType() {
@@ -381,22 +392,44 @@ Bom treino e ótimas gravações!`;
         return '';
     }
 
-    function startRecording() {
+    async function startRecording() {
+        if (state.isRecording || state.isStartingRecording) return;
         if (!state.cameraStream || typeof MediaRecorder === 'undefined') {
             alert('Gravação não disponível: câmera ou MediaRecorder não suportados neste navegador.');
             return;
         }
+        state.isStartingRecording = true;
 
         // Fresh take — drop any previous recording artifacts.
         revokeRecordedUrl();
         state.recordedChunks = [];
+
+        // Acquire the microphone for the recording. Kept separate from the
+        // camera stream so voice recognition can keep using the mic too.
+        let audioTracks = [];
+        try {
+            state.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioTracks = state.audioStream.getAudioTracks();
+        } catch (e) {
+            console.warn('[VFP] Microfone indisponível — gravando apenas vídeo:', e);
+            state.audioStream = null;
+        }
+
+        // Combine the live video track with the freshly captured audio track.
+        const recordStream = new MediaStream([
+            ...state.cameraStream.getVideoTracks(),
+            ...audioTracks
+        ]);
+
         state.recordedMimeType = pickMimeType();
 
         try {
             const options = state.recordedMimeType ? { mimeType: state.recordedMimeType } : undefined;
-            state.mediaRecorder = new MediaRecorder(state.cameraStream, options);
+            state.mediaRecorder = new MediaRecorder(recordStream, options);
         } catch (error) {
             console.error('[VFP] Failed to create MediaRecorder:', error);
+            stopAudioStream();
+            state.isStartingRecording = false;
             alert('Não foi possível iniciar a gravação neste navegador.');
             return;
         }
@@ -418,6 +451,7 @@ Bom treino e ótimas gravações!`;
         // Timeslice keeps chunks flowing (important on some mobile browsers).
         state.mediaRecorder.start(1000);
         state.isRecording = true;
+        state.isStartingRecording = false;
         state.recStartTime = Date.now();
 
         // UI: button -> stop, show timer
@@ -455,6 +489,9 @@ Bom treino e ótimas gravações!`;
     }
 
     function finalizeRecording() {
+        // Release the microphone now that capture is done.
+        stopAudioStream();
+
         if (state.recordedChunks.length === 0) {
             console.warn('[VFP] No recorded data captured.');
             return;
