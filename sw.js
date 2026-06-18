@@ -4,12 +4,12 @@
    Media streams/recordings are never cached.
    ========================================================================== */
 
-const CACHE_VERSION = 'vfp-v2';
+const CACHE_VERSION = 'vfp-v3';
 const APP_SHELL = [
   './',
   './index.html',
   './style.css',
-  './app.js?v=11',
+  './app.js?v=12',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

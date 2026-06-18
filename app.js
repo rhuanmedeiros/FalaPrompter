@@ -282,12 +282,14 @@ Bom treino e ótimas gravações!`;
         state.targetScrollTop = 0;
         els.prompterScrollContainer.scrollTop = 0;
 
-            // Open the camera/microphone (non-blocking — teleprompter still works without it)
-            initCamera();
-
-            // Auto trigger Play
-            setPlayState(true);
-            resetIdleTimer();
+            // Open the camera + grant the mic permission FIRST, then start
+            // playback so speech recognition has the microphone available.
+            // .finally() guarantees we still start (text-only) if the camera
+            // is unavailable.
+            initCamera().finally(() => {
+                setPlayState(true);
+                resetIdleTimer();
+            });
         } catch (error) {
             console.error('[VFP] Failed to start teleprompter:', error);
             updateMicStatus('red', 'Erro ao iniciar teleprompter', false);
@@ -322,12 +324,18 @@ Bom treino e ótimas gravações!`;
         }
 
         try {
-            // VIDEO ONLY on purpose: requesting audio here would seize the
-            // microphone and break the Web Speech API (voice scroll). The mic
-            // is acquired on demand in startRecording().
+            // Request video + audio together so BOTH permissions are granted
+            // up front (one prompt). We then IMMEDIATELY stop the audio track:
+            // - permission stays granted  -> speech recognition won't get 'not-allowed'
+            // - the microphone is freed    -> speech recognition won't get 'audio-capture'
+            // A fresh audio track is acquired on demand in startRecording().
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user' }
+                video: { facingMode: 'user' },
+                audio: true
             });
+            // Drop the audio track right away — keep only video for the preview.
+            stream.getAudioTracks().forEach((track) => track.stop());
+
             state.cameraStream = stream;
             state.cameraReady = true;
             els.cameraFeed.srcObject = stream;
